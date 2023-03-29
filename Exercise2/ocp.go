@@ -8,8 +8,7 @@ type (
 	Scenario struct {
 		ID              ScenarioID
 		GameMode        GameMode
-		Site            Site
-		Game            Game
+		Site            Site Game            Game
 		VehicleCategory CategoryID
 	}
 
@@ -19,45 +18,48 @@ type (
 	Game       string
 	CategoryID string
 	ScenarioID string
+
+	Filter interface {
+		IsSatisfied(s Scenario) bool
+	}
+	Filters    []Filter
+	SiteFilter Site
+	ModeFilter GameMode
+	IDFilter   ScenarioID
 )
 
-// FilterBySite returns only the scenarios that match the site criteria.
-func (s Scenarios) FilterBySite(site Site) Scenarios {
-	scenarios := make(Scenarios, 0)
-
-	for i := range s {
-		if s[i].Site == site {
-			scenarios = append(scenarios, s[i])
+func (f Filters) IsSatisfied(s Scenario) bool {
+	for _, ff := range f {
+		if !ff.IsSatisfied(s) {
+			return false
 		}
 	}
 
-	return scenarios
+	return true
 }
 
-// FilterByMode returns only the scenarios that match the game mode.
-func (s Scenarios) FilterByMode(mode GameMode) Scenarios {
-	scenarios := make(Scenarios, 0)
-
-	for i := range s {
-		if s[i].GameMode == mode {
-			scenarios = append(scenarios, s[i])
-		}
-	}
-
-	return scenarios
+func (s SiteFilter) IsSatisfied(sc Scenario) bool {
+	return Site(s) == sc.Site
 }
 
-// FilterByGame returns only the scenarios that match the game.
-func (s Scenarios) FilterByGame(game Game) Scenarios {
-	scenarios := make(Scenarios, 0)
+func (m ModeFilter) IsSatisfied(sc Scenario) bool {
+	return GameMode(m) == sc.GameMode
+}
 
-	for i := range s {
-		if s[i].Game == game {
-			scenarios = append(scenarios, s[i])
+func (i IDFilter) IsSatisfied(sc Scenario) bool {
+	return ScenarioID(i) == sc.ID
+}
+
+func (s Scenarios) Filter(f Filters) Scenarios {
+	r := make(Scenarios, 0, len(s))
+
+	for _, sc := range s {
+		if f.IsSatisfied(sc) {
+			r = append(r, sc)
 		}
 	}
 
-	return scenarios
+	return r
 }
 
 func main() {
@@ -91,11 +93,10 @@ func main() {
 			VehicleCategory: "11",
 		},
 	}
+	sSite := SiteFilter("MLZ")
+	sID := IDFilter("1")
 
-	bySite := scenarios.FilterBySite("MLT")
-	byMode := scenarios.FilterByMode("crowd")
-	byGame := scenarios.FilterByGame("1")
-	fmt.Println(bySite)
-	fmt.Println(byMode)
-	fmt.Println(byGame)
+	r := scenarios.Filter(Filters{sSite, sID})
+
+	fmt.Println(r)
 }

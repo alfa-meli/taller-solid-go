@@ -8,23 +8,40 @@ import (
 )
 
 func main() {
-	inputFilename := "Exercise1/input.txt"
-	outputFilename := "Exercise1/output.txt"
+	inputFilename := "./input.txt"
+	outputFilename := "./output.txt"
 
-	content, err := ioutil.ReadFile(inputFilename)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	words := strings.Fields(string(content))
-	numWords := len(words)
+	numWords := count(readFile(inputFilename))
 
 	outputContent := fmt.Sprintf("Number of words: %d", numWords)
-	err = ioutil.WriteFile(outputFilename, []byte(outputContent), 0644)
+	writeFile(outputFilename, outputContent)
+
+	print(inputFilename, outputFilename, numWords)
+}
+
+func readFile(filePath string) string {
+	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Number of words in %s: %d\n", inputFilename, numWords)
-	fmt.Printf("Output written to %s\n", outputFilename)
+	return string(content)
+}
+
+func count(content string) int {
+	words := strings.Fields(content)
+
+	return len(words)
+}
+
+func writeFile(filePath, content string) {
+	err := ioutil.WriteFile(filePath, []byte(content), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func print(in, out string, n int) {
+	fmt.Printf("Number of words in %s: %d\n", in, n)
+	fmt.Printf("Output written to %s\n", out)
 }
